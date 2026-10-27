@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cabal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cabal}
+      POSTGRES_DB: cabal
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cabal"]
+      interval: 5s
+      retries: 10
+
+  # Used on the VPS: `docker compose --profile prod up -d --build`
+  bot:
+    profiles: ["prod"]
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://cabal:${POSTGRES_PASSWORD:-cabal}@db:5432/cabal
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,54 @@
+/* Verify-page additions on top of brand.css */
+.eyebrow.is-open {
+  color: var(--acid);
+}
+.eyebrow.is-open .status-dot {
+  background: var(--acid);
+  box-shadow: 0 0 14px var(--acid);
+}
+.closed-badge.is-open,
+.closed-badge.is-done {
+  border-color: rgba(184, 243, 74, 0.45);
+  color: var(--acid);
+  background: var(--acid-soft);
+}
+.closed-badge.is-open span,
+.closed-badge.is-done span {
+  background: var(--acid);
+}
+.progress-fill {
+  width: var(--progress, 0%);
+  transition: width 0.5s ease;
+}
+.progress-meta span:last-child {
+  color: var(--acid);
+}
+.phase-copy code {
+  color: var(--paper);
+  font: 12px var(--mono);
+}
+button.button {
+  cursor: pointer;
+  font: 11px var(--mono);
+}
+button.button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  transform: none;
+}
+.error {
+  min-height: 1.4em;
+  margin: 18px 0 0;
+  color: var(--ember);
+  font: 11px var(--mono);
+  letter-spacing: 0.04em;
+}
+.notice[hidden] {
+  display: none;
+}
+.notice a {
+  color: var(--acid);
+}
+.closed-badge b {
+  font-weight: inherit;
+}

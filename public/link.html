@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Link your wallet to unlock the Hood Cabals holder rooms." />
+    <meta name="theme-color" content="#080909" />
+    <meta name="robots" content="noindex" />
+    <title>HOOD CABALS | Verify</title>
+    <link rel="icon" type="image/png" href="/hoodcabals.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/brand.css" />
+    <link rel="stylesheet" href="/link.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="site-header">
+      <span class="brand">
+        <span class="brand-mark">HC</span>
+        <span>HOOD CABALS</span>
+      </span>
+      <a class="header-social" href="https://x.com/Hoodcabals" target="_blank" rel="noreferrer"
+        >@Hoodcabals <span aria-hidden="true">↗</span></a
+      >
+    </header>
+
+    <main class="layout">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow is-open"><span class="status-dot"></span> HOLDER ACCESS / VERIFY</div>
+        <h1 id="page-title">PROVE<br /><em>LOYALTY.</em></h1>
+        <p class="intro-copy">
+          The rooms only open for holders. Connect the wallet carrying your Hood Cabals, sign once, and the
+          bot handles the rest.
+        </p>
+        <div class="signal-line" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="edition-note"><span>HOOD CABALS</span><span>HOLDER ACCESS / 2026</span></div>
+        <div class="orbit orbit-one" aria-hidden="true"></div>
+        <div class="orbit orbit-two" aria-hidden="true"></div>
+      </section>
+
+      <section class="application-panel" aria-labelledby="status-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">WALLET VERIFICATION</p>
+            <h2 id="status-title">Link your wallet.</h2>
+          </div>
+          <span class="closed-badge is-open" id="badge"><span aria-hidden="true"></span><b id="badge-text">OPEN</b></span>
+        </div>
+
+        <div class="progress" aria-hidden="true">
+          <div class="progress-bar"><span class="progress-fill" id="progress"></span></div>
+          <div class="progress-meta"><span>VERIFICATION</span><span id="progress-text">0 / 3</span></div>
+        </div>
+
+        <ol class="phases" aria-label="Verification steps">
+          <li class="phase phase-active" data-step="1">
+            <span class="phase-marker" aria-hidden="true">01</span>
+            <div class="phase-body">
+              <p class="phase-title">Connect</p>
+              <p class="phase-copy" id="connect-copy">Use the wallet that holds your Hood Cabals.</p>
+            </div>
+            <span class="phase-tag">NOW</span>
+          </li>
+          <li class="phase" data-step="2">
+            <span class="phase-marker" aria-hidden="true">02</span>
+            <div class="phase-body">
+              <p class="phase-title">Sign</p>
+              <p class="phase-copy">One message, tied to your Telegram account. No gas, no transaction.</p>
+            </div>
+            <span class="phase-tag">NEXT</span>
+          </li>
+          <li class="phase" data-step="3">
+            <span class="phase-marker" aria-hidden="true">03</span>
+            <div class="phase-body">
+              <p class="phase-title">Enter</p>
+              <p class="phase-copy" id="enter-copy">Head back to Telegram. Your rooms are waiting in the bot.</p>
+            </div>
+            <span class="phase-tag">SOON</span>
+          </li>
+        </ol>
+
+        <div class="notice" id="no-wallet" hidden>
+          <p class="notice-title"><span aria-hidden="true">◈</span> No wallet in this browser</p>
+          <p>
+            Telegram's browser can't sign. Open this page in
+            <a id="mm-link" href="#">MetaMask</a> or <a id="cb-link" href="#">Coinbase Wallet</a>, or on a
+            desktop with a wallet extension.
+          </p>
+        </div>
+
+        <p class="error" id="error" role="alert"></p>
+
+        <div class="panel-footer">
+          <a class="action-link" href="https://x.com/Hoodcabals" target="_blank" rel="noreferrer"
+            >Follow for transmissions <span aria-hidden="true">↗</span></a
+          >
+          <button class="button" id="action" type="button">
+            <span id="action-text">CONNECT WALLET</span><span class="button-arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <span>HOOD CABALS © 2026</span><span>HOLDER ACCESS / VERIFY</span><span>ROBINHOOD CHAIN</span>
+    </footer>
+    <script src="/link.js" defer></script>
+  </body>
+</html>
