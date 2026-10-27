@@ -74,8 +74,9 @@ export function linkView(url: string, isHttps: boolean) {
     const dapp = url.replace(/^https:\/\//, "");
     keyboard.url("Open verify page ↗", url).row().url("Open in MetaMask ↗", `https://metamask.app.link/dapp/${dapp}`).row();
   } else {
-    // Telegram rejects non-https URLs in buttons, so local testing gets the link as text
-    lines.push("", url);
+    // Telegram won't make localhost clickable or put it in a button, so local
+    // testing gets it as tap-to-copy text
+    lines.push("", "Tap to copy, then paste into your browser:", `<code>${url}</code>`);
   }
   keyboard.text("‹ Back", "home");
   return { text: lines.join("\n"), keyboard };
