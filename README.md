@@ -38,8 +38,8 @@ button.
 ### Groups
 
 For each tier group: add the bot as an admin with **Invite users** and **Ban
-users**, then put the group's chat ID (`-100…`) in the matching
-`TIER_*_CHAT_ID`. Members join through a join-request link and the bot approves
+users**, then send `/chatid` in the group and put the number it replies with in
+the matching `TIER_*_CHAT_ID`. Members join through a join-request link and the bot approves
 or declines based on tier. Any tier left unset is not gated.
 
 ## Deploy on a VPS

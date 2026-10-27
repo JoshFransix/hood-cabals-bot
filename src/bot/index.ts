@@ -83,6 +83,11 @@ export function registerBot(bot: Bot, deps: Deps) {
   pm.callbackQuery("refresh", refresh);
   pm.callbackQuery("help", showHelp);
 
+  // Setup helper: run /chatid inside a tier group to get the ID for .env
+  bot.chatType(["group", "supergroup"]).command("chatid", (ctx) =>
+    ctx.reply(`<code>${ctx.chat.id}</code>`, { parse_mode: "HTML" }),
+  );
+
   bot.on("chat_join_request", async (ctx) => {
     const { chat, from } = ctx.chatJoinRequest;
     const group = deps.groups.find((g) => g.chatId === chat.id);
