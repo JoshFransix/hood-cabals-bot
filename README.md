@@ -24,7 +24,7 @@ run.
 Needs Node 22+ and Docker.
 
 1. Create the bot with [@BotFather](https://t.me/BotFather) (`/newbot`) and copy the token.
-2. `cp .env.example .env` and fill in `BOT_TOKEN` and `NFT_CONTRACT`.
+2. `cp .env.example .env` and fill in `BOT_TOKEN`. `NFT_CONTRACT` is already set to the Hood Cabals collection.
 3. `npm install`
 4. `npm run db:up` starts Postgres in Docker on `localhost:5432`.
 5. `npm run dev`. Migrations run on startup.
@@ -63,6 +63,7 @@ uses long polling, so only the verify page needs to be public.
 | `npm run typecheck`   | Type-check everything                 |
 | `npm run db:generate` | New migration after editing schema.ts |
 | `npm run build`       | Compile to `dist/`                    |
+| `npm run check:contract -- 0xWallet` | Check the NFT contract and a wallet's balance |
 
 ## Branding
 
