@@ -45,10 +45,12 @@ export async function getUser(deps: Deps, telegramId: number): Promise<User | un
 }
 
 export async function touchUser(deps: Deps, telegramId: number, username: string | undefined) {
+  // null, not undefined: Drizzle drops undefined fields and then has nothing to update
+  const name = username ?? null;
   await deps.db
     .insert(users)
-    .values({ telegramId, username })
-    .onConflictDoUpdate({ target: users.telegramId, set: { username } });
+    .values({ telegramId, username: name })
+    .onConflictDoUpdate({ target: users.telegramId, set: { username: name } });
 }
 
 /** Re-reads the wallet's NFT balance, updates the tier and removes access that no longer applies. */

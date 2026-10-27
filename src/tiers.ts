@@ -2,7 +2,7 @@ import type { Config } from "./config.js";
 
 export const TIERS = [
   { id: "hood", name: "Hood", minNfts: 1 },
-  { id: "cabal", name: "Cabal", minNfts: 3 },
+  { id: "cabal", name: "Cabal", minNfts: 5 },
   { id: "inner", name: "Inner Circle", minNfts: 10 },
 ] as const;
 

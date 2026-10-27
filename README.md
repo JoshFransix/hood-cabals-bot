@@ -7,11 +7,28 @@ them a tier. Each tier has a private Telegram group the bot lets them into.
 | Tier         | Held | Rooms                     |
 | ------------ | ---- | ------------------------- |
 | Hood         | 1+   | Hood                      |
-| Cabal        | 3+   | Hood, Cabal               |
+| Cabal        | 5+   | Hood, Cabal               |
 | Inner Circle | 10+  | Hood, Cabal, Inner Circle |
 
 Holdings are re-checked daily. Anyone who drops below a tier is removed from
 that group and gets a DM. Thresholds live in `src/tiers.ts`.
+
+## Token scans
+
+`/scan <address>` in any room, or paste an address in a DM with the bot. The
+chain comes from the address: `0x…` is Robinhood Chain, base58 is Solana.
+
+| Source      | Used for                                                   | Chain           |
+| ----------- | ---------------------------------------------------------- | --------------- |
+| DEXScreener | Price, market cap, liquidity, volume, pair age, chart link | Both            |
+| RugCheck    | Mint/freeze authority, top holders, LP lock, bonding curve | Solana          |
+| GoPlus      | Honeypot, taxes, mint, owner, top holders, LP holders      | Robinhood Chain |
+
+Results are cached for 60 seconds, so many people scanning the same token cost
+one lookup. Holders get 10 scans a minute, everyone else 3. If a source fails,
+the card shows what the others returned, and the verdict becomes UNKNOWN
+rather than LOW. Scoring rules are in `src/scan/risk.ts`; every scan is saved
+to the `scans` table for the alerts and call log later.
 
 ## Stack
 

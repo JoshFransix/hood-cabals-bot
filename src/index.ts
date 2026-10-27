@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import pino from "pino";
 import { BOT_COMMANDS, registerBot } from "./bot/index.js";
+import { registerScan } from "./bot/scan.js";
 import { createChainClient } from "./chain/client.js";
 import { loadConfig } from "./config.js";
 import { createDb } from "./db/client.js";
@@ -32,6 +33,7 @@ const deps: Deps = {
 if (deps.groups.length === 0) log.warn("No TIER_*_CHAT_ID set; wallets will link but no rooms are gated");
 
 registerBot(bot, deps);
+registerScan(bot, deps);
 await bot.api.setMyCommands(BOT_COMMANDS);
 
 const server = await createServer(deps, bot.botInfo.username);

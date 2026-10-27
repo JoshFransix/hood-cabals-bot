@@ -115,5 +115,6 @@ export const BOT_COMMANDS = [
   { command: "start", description: "Main menu" },
   { command: "link", description: "Link your wallet" },
   { command: "status", description: "Your tier and rooms" },
+  { command: "scan", description: "Risk-check a token address" },
   { command: "help", description: "How it works" },
 ];
