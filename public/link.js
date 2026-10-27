@@ -57,6 +57,19 @@
     return "0x" + Array.from(new TextEncoder().encode(text), (b) => b.toString(16).padStart(2, "0")).join("");
   }
 
+  // Some wallets (Phantom) send an https icon or none at all; fall back to a lettered tile
+  function walletIcon(info) {
+    const tile = document.createElement("span");
+    tile.className = "wallet-tile";
+    tile.textContent = (info.name || "?").trim().charAt(0).toUpperCase();
+    if (!/^(data:image\/|https:\/\/)/.test(info.icon || "")) return tile;
+    const img = document.createElement("img");
+    img.src = info.icon;
+    img.alt = "";
+    img.onerror = () => img.replaceWith(tile);
+    return img;
+  }
+
   function renderWalletList() {
     const list = $("wallet-list");
     list.replaceChildren();
@@ -64,12 +77,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "wallet-option";
-      if (/^data:image\//.test(wallet.info.icon || "")) {
-        const icon = document.createElement("img");
-        icon.src = wallet.info.icon;
-        icon.alt = "";
-        button.append(icon);
-      }
+      button.append(walletIcon(wallet.info));
       const name = document.createElement("span");
       name.textContent = wallet.info.name;
       button.append(name);
