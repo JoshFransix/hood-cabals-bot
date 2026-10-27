@@ -45,21 +45,45 @@ function table(rows: [string, string][]): string {
   return `<pre>${rows.map(([k, v]) => escape(k.padEnd(width, " ") + v)).join("\n")}</pre>`;
 }
 
-export function scanCard(scan: FullScan) {
+const DEX_NAMES: Record<string, string> = {
+  pumpfun: "PUMP",
+  pumpswap: "PUMPSWAP",
+  raydium: "RAYDIUM",
+  meteora: "METEORA",
+  orca: "ORCA",
+  uniswap: "UNISWAP",
+};
+
+function fmtCount(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+}
+
+export function scanCard(scan: FullScan, trade: { name: string; url: string }[] = []) {
   const { market: m, security: s, risk } = scan;
   const symbol = m?.symbol ? `$${escape(m.symbol)}` : "UNKNOWN";
-  const chainLabel = scan.chain === "solana" ? "SOLANA" : "ROBINHOOD CHAIN";
+  const chainLabel = scan.chain === "solana" ? "SOLANA" : "ROBINHOOD";
 
+  // One-line summary so the essentials are readable before the table
+  const venue = s?.onBondingCurve ? "PUMP" : m?.dex ? (DEX_NAMES[m.dex] ?? m.dex.toUpperCase()) : null;
+  const meta = [venue, chainLabel, m?.pairCreatedAt ? fmtAge(m.pairCreatedAt) : null, m?.marketCapUsd ? `MC ${fmtUsd(m.marketCapUsd)}` : null]
+    .filter(Boolean)
+    .join(" · ");
+
+  const activity =
+    m?.buys1h !== undefined || m?.sells1h !== undefined ? `  ▲${fmtCount(m?.buys1h ?? 0)} ▼${fmtCount(m?.sells1h ?? 0)}` : "";
   const rows: [string, string][] = [
     ["PRICE", fmtPrice(m?.priceUsd)],
-    ["MCAP", fmtUsd(m?.marketCapUsd)],
+    ["1H", fmtBigPct(m?.priceChange1hPct) + activity],
+    ["24H", fmtBigPct(m?.priceChange24hPct)],
     ["LIQUIDITY", fmtUsd(m?.liquidityUsd)],
     ["VOL 24H", fmtUsd(m?.volume24hUsd)],
-    ["24H", fmtPct(m?.priceChange24hPct, true)],
-    ["AGE", fmtAge(m?.pairCreatedAt)],
     ["HOLDERS", s?.holders !== undefined ? s.holders.toLocaleString("en-US") : "—"],
     ["TOP 10", fmtPct(s?.top10Pct)],
   ];
+  if (s?.top5?.length) rows.push(["TOP 5", s.top5.map((p) => Number(p.toFixed(1))).join(" ")]);
+  if (s?.insiderWallets !== undefined) {
+    rows.push(["INSIDERS", s.insiderWallets ? `${s.insiderWallets} wallets · ${fmtPct(s.insiderPct)}` : "NONE FOUND"]);
+  }
   if (scan.chain === "solana") {
     rows.push(["MINT", yesNo(s?.mintable, "ACTIVE", "REVOKED")], ["FREEZE", yesNo(s?.freezable, "ACTIVE", "REVOKED")]);
   } else {
@@ -73,27 +97,40 @@ export function scanCard(scan: FullScan) {
   if (s?.onBondingCurve) rows.push(["MARKET", "PUMP.FUN CURVE"]);
   else if (s?.lpPositions) rows.push(["LP TOP", s.lpTopHolderPct !== undefined ? `${fmtPct(s.lpTopHolderPct)} ONE WALLET` : "—"]);
   else rows.push(["LP LOCKED", fmtPct(s?.lpLockedPct)]);
-  rows.push(["DEV HOLDS", fmtPct(s?.creatorPct)]);
+  rows.push(["DEV HOLDS", fmtPct(s?.creatorPct)], ["DEX PAID", m?.dexPaid === undefined ? "—" : m.dexPaid ? "YES" : "NO"]);
 
   const reasons = [...risk.reasons, ...(s?.flags ?? [])].slice(0, 6);
   const sources = [m && "DEXScreener", s && (s.source === "rugcheck" ? "RugCheck" : "GoPlus")].filter(Boolean).join(", ");
+  const socials = (m?.socials ?? []).map((l) => `<a href="${escape(l.url)}">${escape(l.label)}</a>`).join(" · ");
 
   const lines = [
     `◈ <b>SCAN / ${symbol}</b>${m?.name ? ` · ${escape(m.name)}` : ""}`,
+    meta ? `<code>${escape(meta)}</code>` : `<code>${chainLabel}</code>`,
     `<code>${scan.address}</code>`,
-    `<code>${chainLabel}</code>`,
     "",
     table(rows),
     `${RISK_BADGE[risk.level]} <b>RISK / ${risk.level}</b>`,
     ...reasons.map((r) => `· ${escape(r)}`),
   ];
+  if (socials) lines.push("", socials);
   if (scan.missing.length) lines.push("", `<i>Couldn't load ${scan.missing.join(" or ")}. Try Rescan.</i>`);
   lines.push("", `<i>Not financial advice.${sources ? ` Data: ${sources}.` : ""}</i>`);
 
   const keyboard = new InlineKeyboard();
+  trade.forEach((t, i) => {
+    keyboard.url(t.name, t.url);
+    if (i % 3 === 2) keyboard.row();
+  });
+  if (trade.length % 3 !== 0) keyboard.row();
   if (m?.url) keyboard.url("Chart ↗", m.url);
   keyboard.text("Rescan ↻", `rescan:${scan.chain}:${scan.address}`);
   return { text: lines.join("\n"), keyboard };
+}
+
+function fmtBigPct(n: number | undefined): string {
+  if (n === undefined || !Number.isFinite(n)) return "—";
+  const sign = n > 0 ? "+" : "";
+  return Math.abs(n) >= 1000 ? `${sign}${(n / 1000).toFixed(1)}K%` : fmtPct(n, true);
 }
 
 export const SCAN_HELP = [

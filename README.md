@@ -30,6 +30,26 @@ the card shows what the others returned, and the verdict becomes UNKNOWN
 rather than LOW. Scoring rules are in `src/scan/risk.ts`; every scan is saved
 to the `scans` table for the alerts and call log later.
 
+### Trade buttons
+
+Scan cards can carry buttons to trading platforms, with your referral code in
+the link. They're configured in `trade-links.json`, not in code:
+
+```json
+{
+  "solana": [
+    { "name": "Axiom", "url": "https://<your axiom token link with {address}>" },
+    { "name": "GMGN", "url": "https://<your gmgn token link with {address}>" }
+  ],
+  "robinhood": []
+}
+```
+
+To get a template, open any token on the platform while logged in, copy its
+share or referral link for that token, and replace the token address in it
+with `{address}`. The bot refuses to start if a link is missing `{address}`.
+Restart after editing.
+
 ## Stack
 
 TypeScript (strict), grammY, Fastify, Postgres with Drizzle, viem, and pg-boss

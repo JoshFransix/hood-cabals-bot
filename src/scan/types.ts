@@ -8,6 +8,12 @@ export interface MarketData {
   liquidityUsd?: number;
   volume24hUsd?: number;
   priceChange24hPct?: number;
+  priceChange1hPct?: number;
+  buys1h?: number;
+  sells1h?: number;
+  socials?: { label: string; url: string }[];
+  /** Dev paid DEXScreener for a profile or boosts */
+  dexPaid?: boolean;
   pairCreatedAt?: Date;
   pairAddress?: string;
   dex?: string;
@@ -20,7 +26,12 @@ export interface SecurityData {
   holders?: number;
   /** Share of supply held by the 10 largest wallets, pools and burn addresses excluded (0-100) */
   top10Pct?: number;
+  /** The five largest individual holders, in percent */
+  top5?: number[];
   creatorPct?: number;
+  /** Wallets RugCheck links into insider networks, and the share of supply they hold */
+  insiderWallets?: number;
+  insiderPct?: number;
   lpLockedPct?: number;
   /** Liquidity is held as Uniswap v3/v4 NFT positions rather than lockable LP tokens */
   lpPositions?: boolean;

@@ -19,6 +19,8 @@ export function assessRisk(market: MarketData | null, security: SecurityData | n
     if (s.top10Pct !== undefined && s.top10Pct > 50) add(2, `Top 10 hold ${fmtPct(s.top10Pct)}`);
     else if (s.top10Pct !== undefined && s.top10Pct > 30) add(1, `Top 10 hold ${fmtPct(s.top10Pct)}`);
     if (s.holders !== undefined && s.holders < 50) add(1, `Only ${s.holders} holders`);
+    if (s.insiderPct !== undefined && s.insiderPct > 20) add(2, `Insider networks hold ${fmtPct(s.insiderPct)}`);
+    else if (s.insiderPct !== undefined && s.insiderPct > 10) add(1, `Insider networks hold ${fmtPct(s.insiderPct)}`);
     if (s.creatorPct !== undefined && s.creatorPct > 10) add(2, `Dev holds ${fmtPct(s.creatorPct)}`);
     if (s.lpPositions) {
       // v3/v4 liquidity can't be burned like LP tokens; what matters is whether one wallet can pull most of it

@@ -5,6 +5,7 @@ import { detectChain, findAddress } from "../scan/detect.js";
 import { RateLimiter } from "../scan/limit.js";
 import { recordScan, scanToken } from "../scan/service.js";
 import type { ScanChain } from "../scan/types.js";
+import { loadTradeLinks, tradeButtons } from "../scan/trade.js";
 import { SCAN_HELP, scanCard } from "../scan/view.js";
 
 // Holders get more scans; everyone else can still try it
@@ -13,6 +14,7 @@ const PUBLIC_PER_MIN = 3;
 
 export function registerScan(bot: Bot, deps: Deps) {
   const limiter = new RateLimiter();
+  const tradeLinks = loadTradeLinks();
 
   async function runScan(ctx: Context, chain: ScanChain, address: string, fresh: boolean) {
     const userId = ctx.from!.id;
@@ -29,7 +31,7 @@ export function registerScan(bot: Bot, deps: Deps) {
     await ctx.replyWithChatAction("typing").catch(() => {});
     const scan = await scanToken(deps, chain, address, { fresh });
     void recordScan(deps, scan, userId, ctx.chat!.id);
-    const card = scanCard(scan);
+    const card = scanCard(scan, tradeButtons(tradeLinks, chain, address));
     const opts = { parse_mode: "HTML" as const, reply_markup: card.keyboard, link_preview_options: { is_disabled: true } };
 
     if (ctx.callbackQuery) {

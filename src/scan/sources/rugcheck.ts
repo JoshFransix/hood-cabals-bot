@@ -8,6 +8,8 @@ interface Report {
   creatorBalance?: number;
   token?: { supply?: number };
   topHolders?: { address: string; owner: string; pct: number }[];
+  graphInsidersDetected?: number;
+  insiderNetworks?: { size: number; currentHolding?: number }[] | null;
   knownAccounts?: Record<string, { name: string; type: string }>;
   totalHolders?: number;
   rugged?: boolean;
@@ -34,6 +36,7 @@ export async function fetchSolanaSecurity(mint: string): Promise<SecurityData> {
   const top10 = (report.topHolders ?? []).filter(isHolder).slice(0, 10);
 
   const supply = report.token?.supply;
+  const insiderHolding = (report.insiderNetworks ?? []).reduce((sum, n) => sum + (n.currentHolding ?? 0), 0);
   const flags = (report.risks ?? []).filter((r) => r.level === "danger").map((r) => r.name);
   if (report.rugged) flags.unshift("Flagged as rugged by RugCheck");
 
@@ -41,6 +44,9 @@ export async function fetchSolanaSecurity(mint: string): Promise<SecurityData> {
     source: "rugcheck",
     holders: report.totalHolders,
     top10Pct: top10.length ? top10.reduce((sum, h) => sum + h.pct, 0) : undefined,
+    top5: top10.slice(0, 5).map((h) => h.pct),
+    insiderWallets: report.graphInsidersDetected,
+    insiderPct: supply && report.insiderNetworks ? (insiderHolding / supply) * 100 : undefined,
     creatorPct: supply && report.creatorBalance !== undefined ? (report.creatorBalance / supply) * 100 : undefined,
     lpLockedPct: summary.lpLockedPct,
     mintable: report.mintAuthority !== null,

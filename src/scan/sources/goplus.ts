@@ -59,6 +59,7 @@ export async function fetchEvmSecurity(address: string, pairAddress?: string): P
     source: "goplus",
     holders: t.holder_count ? Number(t.holder_count) : undefined,
     top10Pct: top10.length ? top10.reduce((sum, h) => sum + Number(h.percent) * 100, 0) : undefined,
+    top5: top10.slice(0, 5).map((h) => Number(h.percent) * 100),
     creatorPct: pct(t.creator_percent),
     lpLockedPct: lpHolders.length ? lpLocked : undefined,
     lpPositions,

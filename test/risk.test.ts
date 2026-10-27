@@ -57,6 +57,10 @@ describe("assessRisk", () => {
     expect(r.reasons).toContain("Security check unavailable");
   });
 
+  it("flags supply held by insider networks", () => {
+    expect(assessRisk(healthyMarket, { ...cleanSol, insiderPct: 35 }).reasons).toContain("Insider networks hold 35%");
+  });
+
   it("is UNKNOWN with no data at all", () => {
     expect(assessRisk(null, null).level).toBe("UNKNOWN");
   });
