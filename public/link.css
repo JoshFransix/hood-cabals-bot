@@ -52,3 +52,37 @@ button.button:disabled {
 .closed-badge b {
   font-weight: inherit;
 }
+.wallet-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 27px;
+}
+.wallet-list[hidden] {
+  display: none;
+}
+.wallet-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  color: var(--paper);
+  background: rgba(11, 13, 12, 0.7);
+  font: 12px var(--mono);
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.wallet-option:hover,
+.wallet-option:focus-visible {
+  border-color: var(--acid);
+  background: var(--acid-soft);
+  outline: none;
+}
+.wallet-option img {
+  width: 22px;
+  height: 22px;
+}
