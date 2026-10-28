@@ -9,6 +9,7 @@ import { createDb } from "./db/client.js";
 import type { Deps } from "./deps.js";
 import { startJobs } from "./jobs/index.js";
 import { tierGroups } from "./tiers.js";
+import { EvmWalletWatcher } from "./wallets/evm.js";
 import { syncHeliusWebhook } from "./wallets/helius.js";
 import { createServer } from "./web/server.js";
 
@@ -46,6 +47,9 @@ await bot.api.setMyCommands(BOT_COMMANDS);
 const server = await createServer(deps, bot.botInfo.username);
 await server.listen({ port: config.PORT, host: "0.0.0.0" });
 log.info(await syncHeliusWebhook(deps).catch((err) => `Helius sync failed: ${err.message}`));
+const evm = new EvmWalletWatcher(deps);
+const stopEvm = evm.start();
+log.info(`Watching tracked EVM wallets on ${evm.chains.join(", ")}`);
 
 bot.start({
   allowed_updates: ["message", "channel_post", "callback_query", "chat_join_request"],
@@ -55,6 +59,7 @@ bot.start({
 async function shutdown() {
   log.info("shutting down");
   await bot.stop();
+  stopEvm();
   await boss.stop();
   await server.close();
   await database.close();

@@ -26,6 +26,20 @@ const schema = z.object({
   // Only count intake messages from this Telegram account (the relay); leave unset to accept anyone
   INTAKE_FROM_ID: chatId.optional(),
   HELIUS_API_KEY: z.string().optional(),
+  // Extra EVM chains to watch tracked wallets on, as chain=rpc pairs: "base=https://mainnet.base.org,bsc=https://..."
+  // Robinhood Chain is always watched through RPC_URL. Chain names are DEXScreener's.
+  EVM_RPCS: z
+    .string()
+    .default("")
+    .transform((s) =>
+      Object.fromEntries(
+        s
+          .split(",")
+          .map((pair) => pair.trim().split("="))
+          .filter(([chain, url]) => chain && url)
+          .map(([chain, url]) => [chain!.trim(), url!.trim()]),
+      ),
+    ),
   // Telegram user ids allowed to /track and /untrack wallets, comma-separated
   ADMIN_IDS: z
     .string()

@@ -1,4 +1,4 @@
-import { and, eq, or } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import type { Bot, Context } from "grammy";
 import { submitSignal } from "../alerts/pipeline.js";
 import { trackedWallets, users } from "../db/schema.js";
@@ -6,11 +6,13 @@ import type { Deps } from "../deps.js";
 import { getUser } from "../holders.js";
 import { findAddress, parseAddress } from "../scan/detect.js";
 import { tierById } from "../tiers.js";
+import { evmRpcs } from "../wallets/evm.js";
 import { syncHeliusWebhook } from "../wallets/helius.js";
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function registerAlerts(bot: Bot, deps: Deps) {
+  const evmChains = Object.keys(evmRpcs(deps.config));
   const isAdmin = (ctx: Context) => ctx.from !== undefined && deps.config.ADMIN_IDS.includes(ctx.from.id);
 
   // Relay intake: any CA posted in the intake chat becomes a signal. Registered first so it
@@ -52,15 +54,20 @@ export function registerAlerts(bot: Bot, deps: Deps) {
     if (!isAdmin(ctx)) return;
     const [raw, ...labelParts] = ctx.match.trim().split(/\s+/);
     const parsed = parseAddress(raw ?? "");
-    if (!parsed || parsed.kind !== "base58") {
-      return ctx.reply("Usage: /track <solana wallet> [label]\nOnly Solana wallets for now.");
+    if (!parsed || parsed.kind === "ton") {
+      return ctx.reply("Usage: /track <wallet> [label]\nSolana wallets, or 0x wallets (watched on every EVM chain configured).");
     }
-    const label = (labelParts.join(" ") || `CABAL-${parsed.address.slice(0, 4)}`).slice(0, 24);
+    // An EVM address is the same wallet on every EVM chain, so it's stored once and watched on all of them
+    const chain = parsed.kind === "evm" ? "evm" : "solana";
+    const label = (labelParts.join(" ") || `WHALE-${parsed.address.slice(-4).toUpperCase()}`).slice(0, 24);
     await deps.db
       .insert(trackedWallets)
-      .values({ chain: "solana", address: parsed.address, label, addedBy: ctx.from!.id })
+      .values({ chain, address: parsed.address, label, addedBy: ctx.from!.id })
       .onConflictDoUpdate({ target: [trackedWallets.chain, trackedWallets.address], set: { label } });
-    const status = await syncHeliusWebhook(deps).catch((err) => `Saved, but Helius sync failed: ${err.message}`);
+    const status =
+      chain === "solana"
+        ? await syncHeliusWebhook(deps).catch((err) => `Saved, but Helius sync failed: ${err.message}`)
+        : `Watching on ${evmChains.map((c) => c.toUpperCase()).join(", ")}.`;
     await ctx.reply(`◈ Tracking <b>${escape(label)}</b>\n<code>${parsed.address}</code>\n\n${escape(status)}`, { parse_mode: "HTML" });
   });
 
@@ -79,9 +86,10 @@ export function registerAlerts(bot: Bot, deps: Deps) {
 
   bot.command("wallets", async (ctx) => {
     if (!isAdmin(ctx)) return;
-    const list = await deps.db.select().from(trackedWallets).where(and(eq(trackedWallets.chain, "solana")));
+    const list = await deps.db.select().from(trackedWallets);
     if (!list.length) return ctx.reply("No wallets tracked. Add one with /track <wallet> [label].");
-    const lines = list.map((w) => `<b>${escape(w.label)}</b>\n<code>${w.address}</code>`);
+    const where = (chain: string) => (chain === "evm" ? `EVM · ${evmChains.map((c) => c.toUpperCase()).join(", ")}` : "SOLANA");
+    const lines = list.map((w) => `<b>${escape(w.label)}</b> · <code>${where(w.chain)}</code>\n<code>${w.address}</code>`);
     await ctx.reply(`◈ <b>TRACKED WALLETS</b> · ${list.length}\n\n${lines.join("\n\n")}`, { parse_mode: "HTML" });
   });
 }

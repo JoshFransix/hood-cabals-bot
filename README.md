@@ -63,11 +63,16 @@ Two feeds turn into alerts:
 - **Call feed.** Any token address posted in `INTAKE_CHAT_ID` (your relay's
   group). The bot must be an admin there to see plain messages. Set
   `INTAKE_FROM_ID` to only accept the relay account.
-- **Tracked wallets.** Solana wallets added with `/track <wallet> [label]`.
-  Helius sends their transactions to `/hooks/helius`; a buy is a wallet ending
-  up with more of a token and less SOL or stablecoin. Needs `HELIUS_API_KEY`
-  and an https `PUBLIC_URL`. Only `ADMIN_IDS` can `/track`, `/untrack` and
-  `/wallets`; anyone can get their id with `/myid`.
+- **Tracked wallets.** Added with `/track <wallet> [label]`. Only `ADMIN_IDS`
+  can `/track`, `/untrack` and `/wallets`; anyone can get their id with `/myid`.
+  - Solana: Helius sends the wallets' transactions to `/hooks/helius`; a buy is
+    a wallet ending up with more of a token and less SOL or stablecoin. Needs
+    `HELIUS_API_KEY` and an https `PUBLIC_URL`.
+  - EVM (`0x…`): one address is watched on every configured chain. The bot polls
+    each chain's RPC every 15 seconds for token transfers into tracked wallets;
+    a buy is a transfer in a transaction the wallet sent itself, of a token
+    that isn't ETH or a stablecoin. Robinhood Chain uses `RPC_URL`; add others
+    with `EVM_RPCS`.
 
 Each signal is scanned. HIGH or UNKNOWN risk, liquidity under
 `ALERT_MIN_LIQUIDITY`, and repeats of a token alerted in the last 24 hours are
