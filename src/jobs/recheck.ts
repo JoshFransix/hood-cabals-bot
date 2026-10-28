@@ -13,7 +13,8 @@ export async function recheckAll(deps: Deps) {
   let failed = 0;
   for (const { telegramId } of rows) {
     try {
-      await refreshHolder(deps, telegramId, { notify: true });
+      // syncTags also covers members who joined before tags existed or had theirs edited by hand
+      await refreshHolder(deps, telegramId, { notify: true, syncTags: true });
     } catch (err) {
       failed++;
       deps.log.warn({ err, telegramId }, "recheck failed");

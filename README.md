@@ -80,10 +80,15 @@ button.
 
 ### Groups
 
-For each tier group: add the bot as an admin with **Invite users** and **Ban
-users**, then send `/chatid` in the group and put the number it replies with in
+For each tier group: add the bot as an admin with **Add users**, **Ban users**
+and **Edit Member Tags**, then send `/chatid` in the group and put the number it replies with in
 the matching `TIER_*_CHAT_ID`. Members join through a join-request link and the bot approves
 or declines based on tier. Any tier left unset is not gated.
+
+Members get their tier as a tag next to their name (`HOOD`, `CABAL`,
+`INNER CIRCLE`) in every room, which shows best in the Hood room where all
+tiers mix. Tags update when a tier changes and are re-applied on the daily
+check. Set `COMMUNITY_CHAT_ID` to also tag verified holders in an open group.
 
 ## Deploy on a VPS
 

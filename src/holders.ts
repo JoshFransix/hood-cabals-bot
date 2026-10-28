@@ -4,7 +4,7 @@ import { tierChangeText } from "./bot/views.js";
 import { nftBalance } from "./chain/client.js";
 import { users, type User } from "./db/schema.js";
 import type { Deps } from "./deps.js";
-import { canAccess, tierById, tierFor, type TierGroup, type TierId } from "./tiers.js";
+import { canAccess, tierById, tierFor, tierTag, type Tier, type TierGroup, type TierId } from "./tiers.js";
 
 const inviteLinks = new Map<number, string>();
 
@@ -39,6 +39,20 @@ async function revokeAccess(deps: Deps, telegramId: number, from: TierId | null,
   }
 }
 
+/** Shows the member's tier next to their name in every room they can be in, plus the community group. */
+export async function syncTags(deps: Deps, telegramId: number, tier: Tier | null) {
+  const chats = [
+    ...allowedGroups(deps, tier?.id ?? null).map((g) => g.chatId),
+    ...(deps.config.COMMUNITY_CHAT_ID !== undefined ? [deps.config.COMMUNITY_CHAT_ID] : []),
+  ];
+  for (const chatId of chats) {
+    // Fails harmlessly when the member hasn't joined that chat
+    await deps.api.setChatMemberTag(chatId, telegramId, tierTag(tier)).catch((err) => {
+      deps.log.debug({ err, telegramId, chatId }, "tag skipped");
+    });
+  }
+}
+
 export async function getUser(deps: Deps, telegramId: number): Promise<User | undefined> {
   const [user] = await deps.db.select().from(users).where(eq(users.telegramId, telegramId));
   return user;
@@ -57,7 +71,7 @@ export async function touchUser(deps: Deps, telegramId: number, username: string
 export async function refreshHolder(
   deps: Deps,
   telegramId: number,
-  opts: { notify: boolean },
+  opts: { notify: boolean; syncTags?: boolean },
 ): Promise<User | undefined> {
   const user = await getUser(deps, telegramId);
   if (!user?.wallet) return user;
@@ -79,6 +93,7 @@ export async function refreshHolder(
       await deps.api.sendMessage(telegramId, text, { parse_mode: "HTML" }).catch(() => {});
     }
   }
+  if (oldTier?.id !== tier?.id || opts.syncTags) await syncTags(deps, telegramId, tier);
   return updated;
 }
 
@@ -93,6 +108,7 @@ export async function linkWallet(deps: Deps, telegramId: number, wallet: Address
     .returning({ telegramId: users.telegramId, tier: users.tier });
   for (const p of previous) {
     await revokeAccess(deps, p.telegramId, tierById(p.tier)?.id ?? null, null);
+    await syncTags(deps, p.telegramId, null);
     await deps.api
       .sendMessage(p.telegramId, "◈ Your wallet was linked to another Telegram account, so your access here was removed.")
       .catch(() => {});

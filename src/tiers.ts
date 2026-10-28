@@ -31,6 +31,11 @@ export function canAccess(userTier: TierId | null, groupTier: TierId): boolean {
   return rank(userTier) >= rank(groupTier);
 }
 
+/** Telegram member tags: max 16 characters, no emoji. */
+export function tierTag(tier: Tier | null): string {
+  return tier ? tier.name.toUpperCase() : "";
+}
+
 export interface TierGroup {
   tier: Tier;
   chatId: number;

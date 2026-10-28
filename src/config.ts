@@ -16,6 +16,8 @@ const schema = z.object({
   TIER_HOOD_CHAT_ID: chatId.optional(),
   TIER_CABAL_CHAT_ID: chatId.optional(),
   TIER_INNER_CHAT_ID: chatId.optional(),
+  // Optional open group: not gated, but verified holders get their tier tag there
+  COMMUNITY_CHAT_ID: chatId.optional(),
   RECHECK_CRON: z.string().default("17 4 * * *"),
   LOG_LEVEL: z.string().default("info"),
 });

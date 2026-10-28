@@ -3,7 +3,7 @@ import { linkRequests } from "../db/schema.js";
 import type { Deps } from "../deps.js";
 import { allowedGroups, getUser, inviteLink, refreshHolder, touchUser } from "../holders.js";
 import { LINK_TTL_MS, newNonce } from "../link/message.js";
-import { canAccess, tierById } from "../tiers.js";
+import { canAccess, tierById, tierTag } from "../tiers.js";
 import { HELP_TEXT, homeView, linkView, statusView } from "./views.js";
 
 const REFRESH_COOLDOWN_MS = 60_000;
@@ -96,6 +96,7 @@ export function registerBot(bot: Bot, deps: Deps) {
     const tier = tierById(user?.tier ?? null);
     if (canAccess(tier?.id ?? null, group.tier.id)) {
       await ctx.approveChatJoinRequest(from.id);
+      await ctx.api.setChatMemberTag(chat.id, from.id, tierTag(tier)).catch(() => {});
       deps.log.info({ user: from.id, group: group.tier.id }, "join approved");
     } else {
       await ctx.declineChatJoinRequest(from.id);
