@@ -56,11 +56,36 @@ share or referral link for that token, and replace the token address in it
 with `{address}`. The bot refuses to start if a link is missing `{address}`.
 Restart after editing.
 
+## Alerts
+
+Two feeds turn into alerts:
+
+- **Call feed.** Any token address posted in `INTAKE_CHAT_ID` (your relay's
+  group). The bot must be an admin there to see plain messages. Set
+  `INTAKE_FROM_ID` to only accept the relay account.
+- **Tracked wallets.** Solana wallets added with `/track <wallet> [label]`.
+  Helius sends their transactions to `/hooks/helius`; a buy is a wallet ending
+  up with more of a token and less SOL or stablecoin. Needs `HELIUS_API_KEY`
+  and an https `PUBLIC_URL`. Only `ADMIN_IDS` can `/track`, `/untrack` and
+  `/wallets`; anyone can get their id with `/myid`.
+
+Each signal is scanned. HIGH or UNKNOWN risk, liquidity under
+`ALERT_MIN_LIQUIDITY`, and repeats of a token alerted in the last 24 hours are
+dropped, and every signal is logged in `signals` with the reason. The rest go
+out in waves: Inner Circle immediately, Cabal after `ALERT_DELAY_CABAL_MIN`,
+Hood after `ALERT_DELAY_HOOD_MIN`. Each wave posts in that tier's room and DMs
+members of that tier who turned DMs on with `/alerts`.
+
+Market cap is checked 1, 6 and 24 hours after each alert. A 2x or better gets a
+reply under the original room post, and `RECAP_CRON` posts a weekly recap of
+every alert, misses included.
+
 ## Stack
 
 TypeScript (strict), grammY, Fastify, Postgres with Drizzle, viem, and pg-boss
-for the daily job. pg-boss keeps its queue in Postgres, so there's no Redis to
-run.
+for scheduled work (holder re-checks, alert waves, checkpoints, the recap).
+pg-boss keeps its queue in Postgres, so there's no Redis to run, and scheduled
+waves survive a restart.
 
 ## Run locally
 

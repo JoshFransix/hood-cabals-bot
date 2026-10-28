@@ -90,7 +90,8 @@ export const HELP_TEXT = [
   "<code>01</code> Tap Link wallet and sign with the wallet holding your Hood Cabals.",
   "<code>02</code> Your tier is set by how many you hold. Each tier opens its own room and every room below it.",
   "<code>03</code> Holdings are checked daily. Drop below a tier and you're out of that room.",
-  "<code>04</code> Paste any Solana or Robinhood Chain token address here, or use /scan in the rooms, for a risk check.",
+  "<code>04</code> Paste any token address here, or use /scan in the rooms, for a risk check.",
+  "<code>05</code> Alerts land in your room. Inner Circle gets them first, then Cabal, then Hood. Send /alerts to also get them by DM.",
   "",
   "One wallet, one Telegram account.",
 ].join("\n");

@@ -35,6 +35,14 @@ export function loadTradeLinks(path = join(process.cwd(), "trade-links.json")): 
   return parsed.data;
 }
 
+let cached: TradeLinks | undefined;
+
+/** Loads trade-links.json once per process; it only changes on restart. */
+export function getTradeLinks(): TradeLinks {
+  cached ??= loadTradeLinks();
+  return cached;
+}
+
 export function tradeButtons(links: TradeLinks, chain: ScanChain, address: string, pair?: string) {
   return (links[chain] ?? [])
     .filter((l) => pair || !l.url.includes("{pair}"))

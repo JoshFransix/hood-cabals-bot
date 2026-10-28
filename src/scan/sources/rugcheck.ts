@@ -8,7 +8,6 @@ interface Report {
   creatorBalance?: number;
   token?: { supply?: number };
   topHolders?: { address: string; owner: string; pct: number }[];
-  graphInsidersDetected?: number;
   insiderNetworks?: { size: number; currentHolding?: number }[] | null;
   knownAccounts?: Record<string, { name: string; type: string }>;
   totalHolders?: number;
@@ -23,6 +22,7 @@ interface Summary {
 
 // Pools, lockers and burn accounts aren't "holders" in the sense traders care about
 const NOT_HOLDERS = new Set(["AMM", "LOCKER", "BURN"]);
+const MAX_INSIDER_NETWORK = 50;
 
 export async function fetchSolanaSecurity(mint: string): Promise<SecurityData> {
   const [report, summary] = await Promise.all([
@@ -36,7 +36,10 @@ export async function fetchSolanaSecurity(mint: string): Promise<SecurityData> {
   const top10 = (report.topHolders ?? []).filter(isHolder).slice(0, 10);
 
   const supply = report.token?.supply;
-  const insiderHolding = (report.insiderNetworks ?? []).reduce((sum, n) => sum + (n.currentHolding ?? 0), 0);
+  // Real insider groups are a handful of wallets. Clusters of thousands are exchanges and market makers
+  // passing tokens around, and their holdings can even add up to more than the supply.
+  const insiderNetworks = (report.insiderNetworks ?? []).filter((n) => n.size <= MAX_INSIDER_NETWORK);
+  const insiderHolding = insiderNetworks.reduce((sum, n) => sum + (n.currentHolding ?? 0), 0);
   const flags = (report.risks ?? []).filter((r) => r.level === "danger").map((r) => r.name);
   if (report.rugged) flags.unshift("Flagged as rugged by RugCheck");
 
@@ -45,8 +48,8 @@ export async function fetchSolanaSecurity(mint: string): Promise<SecurityData> {
     holders: report.totalHolders,
     top10Pct: top10.length ? top10.reduce((sum, h) => sum + h.pct, 0) : undefined,
     top5: top10.slice(0, 5).map((h) => h.pct),
-    insiderWallets: report.graphInsidersDetected,
-    insiderPct: supply && report.insiderNetworks ? (insiderHolding / supply) * 100 : undefined,
+    insiderWallets: report.insiderNetworks ? insiderNetworks.reduce((sum, n) => sum + n.size, 0) : undefined,
+    insiderPct: supply && report.insiderNetworks ? Math.min(100, (insiderHolding / supply) * 100) : undefined,
     creatorPct: supply && report.creatorBalance !== undefined ? (report.creatorBalance / supply) * 100 : undefined,
     lpLockedPct: summary.lpLockedPct,
     mintable: report.mintAuthority !== null,

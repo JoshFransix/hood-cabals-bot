@@ -6,7 +6,10 @@ import Fastify from "fastify";
 import { z } from "zod";
 import { linkRequests } from "../db/schema.js";
 import type { Deps } from "../deps.js";
+import { submitSignal } from "../alerts/pipeline.js";
+import { trackedWallets } from "../db/schema.js";
 import { linkWallet } from "../holders.js";
+import { findBuys, HELIUS_WEBHOOK_PATH, webhookSecret, type EnhancedTx } from "../wallets/helius.js";
 import { linkMessage, verifyLinkSignature } from "../link/message.js";
 import { tierById } from "../tiers.js";
 import { linkedText } from "../bot/views.js";
@@ -71,6 +74,24 @@ export async function createServer(deps: Deps, botUsername: string) {
       .sendMessage(found.req.telegramId, linkedText(tier?.name ?? null, user?.nftCount ?? 0), { parse_mode: "HTML" })
       .catch(() => {});
     return { tier: tier?.name ?? null, nftCount: user?.nftCount ?? 0 };
+  });
+
+  // Helius posts every transaction from a tracked wallet here; buys become alert signals
+  const secret = webhookSecret(deps.config.BOT_TOKEN);
+  app.post(HELIUS_WEBHOOK_PATH, { bodyLimit: 5 * 1024 * 1024 }, async (request, reply) => {
+    if (request.headers.authorization !== secret) return reply.code(401).send();
+    const txs = Array.isArray(request.body) ? (request.body as EnhancedTx[]) : [];
+    // Answer straight away so Helius doesn't retry while we scan
+    reply.code(200).send({ ok: true });
+    const wallets = await deps.db.select().from(trackedWallets);
+    const labels = new Map(wallets.map((w) => [w.address, w.label]));
+    for (const tx of txs) {
+      for (const buy of findBuys(tx, new Set(labels.keys()))) {
+        void submitSignal(deps, { address: buy.mint, source: "wallet", detail: labels.get(buy.wallet), chain: "solana" }).catch((err) =>
+          deps.log.error({ err, buy }, "wallet signal failed"),
+        );
+      }
+    }
   });
 
   return app;

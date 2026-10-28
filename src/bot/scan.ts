@@ -4,7 +4,7 @@ import { getUser } from "../holders.js";
 import { findAddress, parseAddress } from "../scan/detect.js";
 import { RateLimiter } from "../scan/limit.js";
 import { recordScan, scanToken, type ScanRequest } from "../scan/service.js";
-import { loadTradeLinks, tradeButtons } from "../scan/trade.js";
+import { getTradeLinks, tradeButtons } from "../scan/trade.js";
 import { SCAN_HELP, scanCard } from "../scan/view.js";
 
 // Holders get more scans; everyone else can still try it
@@ -13,7 +13,7 @@ const PUBLIC_PER_MIN = 3;
 
 export function registerScan(bot: Bot, deps: Deps) {
   const limiter = new RateLimiter();
-  const tradeLinks = loadTradeLinks();
+  const tradeLinks = getTradeLinks();
 
   async function runScan(ctx: Context, req: ScanRequest, fresh: boolean) {
     const userId = ctx.from!.id;

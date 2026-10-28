@@ -1,13 +1,15 @@
 import { Bot } from "grammy";
 import pino from "pino";
 import { BOT_COMMANDS, registerBot } from "./bot/index.js";
+import { registerAlerts } from "./bot/alerts.js";
 import { registerScan } from "./bot/scan.js";
 import { createChainClient } from "./chain/client.js";
 import { loadConfig } from "./config.js";
 import { createDb } from "./db/client.js";
 import type { Deps } from "./deps.js";
-import { startJobs } from "./jobs/recheck.js";
+import { startJobs } from "./jobs/index.js";
 import { tierGroups } from "./tiers.js";
+import { syncHeliusWebhook } from "./wallets/helius.js";
 import { createServer } from "./web/server.js";
 
 const config = loadConfig();
@@ -32,17 +34,21 @@ const deps: Deps = {
 };
 if (deps.groups.length === 0) log.warn("No TIER_*_CHAT_ID set; wallets will link but no rooms are gated");
 
+// Jobs first: alerts arriving from the webhook or intake need the queue to schedule waves
+const boss = await startJobs(deps);
+
+// Intake runs before everything else so relay posts never reach the scan handlers
+registerAlerts(bot, deps);
 registerBot(bot, deps);
 registerScan(bot, deps);
 await bot.api.setMyCommands(BOT_COMMANDS);
 
 const server = await createServer(deps, bot.botInfo.username);
 await server.listen({ port: config.PORT, host: "0.0.0.0" });
-
-const boss = await startJobs(deps);
+log.info(await syncHeliusWebhook(deps).catch((err) => `Helius sync failed: ${err.message}`));
 
 bot.start({
-  allowed_updates: ["message", "callback_query", "chat_join_request"],
+  allowed_updates: ["message", "channel_post", "callback_query", "chat_join_request"],
   onStart: (me) => log.info(`@${me.username} running, verify page at ${config.PUBLIC_URL}/link`),
 });
 

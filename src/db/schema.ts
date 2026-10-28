@@ -1,4 +1,4 @@
-import { bigint, doublePrecision, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, doublePrecision, index, integer, pgTable, serial, text, timestamp, unique } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   telegramId: bigint("telegram_id", { mode: "number" }).primaryKey(),
@@ -8,6 +8,8 @@ export const users = pgTable("users", {
   tier: text("tier"),
   linkedAt: timestamp("linked_at", { withTimezone: true }),
   checkedAt: timestamp("checked_at", { withTimezone: true }),
+  // Holders opt in to alert DMs with /alerts
+  alertsDm: boolean("alerts_dm").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -35,4 +37,66 @@ export const scans = pgTable("scans", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const trackedWallets = pgTable(
+  "tracked_wallets",
+  {
+    id: serial("id").primaryKey(),
+    chain: text("chain").notNull(),
+    address: text("address").notNull(),
+    label: text("label").notNull(),
+    addedBy: bigint("added_by", { mode: "number" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.chain, t.address)],
+);
+
+// Everything that might become an alert, kept even when it doesn't, so we can see what got filtered and why
+export const signals = pgTable(
+  "signals",
+  {
+    id: serial("id").primaryKey(),
+    address: text("address").notNull(),
+    chain: text("chain"),
+    source: text("source").notNull(),
+    detail: text("detail"),
+    outcome: text("outcome").notNull(),
+    alertId: integer("alert_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.address, t.createdAt)],
+);
+
+export const alerts = pgTable(
+  "alerts",
+  {
+    id: serial("id").primaryKey(),
+    chain: text("chain").notNull(),
+    address: text("address").notNull(),
+    symbol: text("symbol"),
+    source: text("source").notNull(),
+    detail: text("detail"),
+    riskLevel: text("risk_level").notNull(),
+    priceUsd: doublePrecision("price_usd"),
+    marketCapUsd: doublePrecision("market_cap_usd"),
+    liquidityUsd: doublePrecision("liquidity_usd"),
+    // Market cap at each checkpoint, and the best multiple seen at any of them
+    marketCap1h: doublePrecision("market_cap_1h"),
+    marketCap6h: doublePrecision("market_cap_6h"),
+    marketCap24h: doublePrecision("market_cap_24h"),
+    peakMultiple: doublePrecision("peak_multiple"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.chain, t.address, t.createdAt)],
+);
+
+export const alertMessages = pgTable("alert_messages", {
+  id: serial("id").primaryKey(),
+  alertId: integer("alert_id").notNull(),
+  chatId: bigint("chat_id", { mode: "number" }).notNull(),
+  messageId: integer("message_id").notNull(),
+  // Only room posts get follow-ups; DMs stay quiet after the first message
+  isRoom: boolean("is_room").notNull(),
+});
+
 export type User = typeof users.$inferSelect;
+export type Alert = typeof alerts.$inferSelect;
