@@ -82,12 +82,14 @@ export function recapText(stats: RecapStats): string {
   ].join("\n");
 }
 
-export async function weeklyRecap(deps: Deps) {
+/** Monday post: the alert recap, then the week's top callers. Either is skipped if there's nothing to show. */
+export async function weeklyRecap(deps: Deps, topCallers: (deps: Deps) => Promise<string | null>) {
   const list = await deps.db.select().from(alerts).where(gt(alerts.createdAt, new Date(Date.now() - 7 * 24 * 3600_000)));
-  if (list.length === 0) return;
-  const text = recapText(recapStats(list));
+  const posts = [list.length ? recapText(recapStats(list)) : null, await topCallers(deps)].filter((p): p is string => p !== null);
   const chats = [...deps.groups.map((g) => g.chatId), ...(deps.config.COMMUNITY_CHAT_ID !== undefined ? [deps.config.COMMUNITY_CHAT_ID] : [])];
-  for (const chatId of chats) {
-    await deps.api.sendMessage(chatId, text, { parse_mode: "HTML" }).catch((err) => deps.log.warn({ err, chatId }, "recap failed"));
+  for (const text of posts) {
+    for (const chatId of chats) {
+      await deps.api.sendMessage(chatId, text, { parse_mode: "HTML" }).catch((err) => deps.log.warn({ err, chatId }, "recap failed"));
+    }
   }
 }

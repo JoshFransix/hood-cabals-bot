@@ -117,6 +117,9 @@ export const BOT_COMMANDS = [
   { command: "link", description: "Link your wallet" },
   { command: "status", description: "Your tier and rooms" },
   { command: "scan", description: "Risk-check a token address" },
+  { command: "call", description: "Call a token; it's scored on the leaderboard" },
+  { command: "leaderboard", description: "Top callers" },
+  { command: "mycalls", description: "Your call record" },
   { command: "alerts", description: "Turn alert DMs on or off" },
   { command: "help", description: "How it works" },
 ];

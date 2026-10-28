@@ -60,7 +60,8 @@ export async function fetchMarket(chain: ScanChain, address: string, known?: Pai
 
   return {
     name: pair.baseToken.name,
-    symbol: pair.baseToken.symbol,
+    // Some tokens put the $ in their symbol ("$WIF"); the cards add their own
+    symbol: pair.baseToken.symbol.replace(/^\$+/, "").trim(),
     priceUsd: pair.priceUsd ? Number(pair.priceUsd) : undefined,
     marketCapUsd: pair.marketCap ?? pair.fdv,
     liquidityUsd: pair.liquidity?.usd,

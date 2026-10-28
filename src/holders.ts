@@ -45,9 +45,12 @@ export async function syncTags(deps: Deps, telegramId: number, tier: Tier | null
     ...allowedGroups(deps, tier?.id ?? null).map((g) => g.chatId),
     ...(deps.config.COMMUNITY_CHAT_ID !== undefined ? [deps.config.COMMUNITY_CHAT_ID] : []),
   ];
+  // The week's top caller shows that instead of their tier
+  const [row] = await deps.db.select({ until: users.topCallerUntil }).from(users).where(eq(users.telegramId, telegramId));
+  const tag = tier && row?.until && row.until > new Date() ? "TOP CALLER" : tierTag(tier);
   for (const chatId of chats) {
     // Fails harmlessly when the member hasn't joined that chat
-    await deps.api.setChatMemberTag(chatId, telegramId, tierTag(tier)).catch((err) => {
+    await deps.api.setChatMemberTag(chatId, telegramId, tag).catch((err) => {
       deps.log.debug({ err, telegramId, chatId }, "tag skipped");
     });
   }

@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import pino from "pino";
 import { BOT_COMMANDS, registerBot } from "./bot/index.js";
 import { registerAlerts } from "./bot/alerts.js";
+import { registerCalls } from "./bot/calls.js";
 import { registerScan } from "./bot/scan.js";
 import { createChainClient } from "./chain/client.js";
 import { loadConfig } from "./config.js";
@@ -41,6 +42,7 @@ const boss = await startJobs(deps);
 // Intake runs before everything else so relay posts never reach the scan handlers
 registerAlerts(bot, deps);
 registerBot(bot, deps);
+registerCalls(bot, deps);
 registerScan(bot, deps);
 await bot.api.setMyCommands(BOT_COMMANDS);
 

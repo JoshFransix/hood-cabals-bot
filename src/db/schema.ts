@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   checkedAt: timestamp("checked_at", { withTimezone: true }),
   // Holders opt in to alert DMs with /alerts
   alertsDm: boolean("alerts_dm").notNull().default(false),
+  // Weekly #1 caller wears the TOP CALLER tag until this time
+  topCallerUntil: timestamp("top_caller_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -98,5 +100,31 @@ export const alertMessages = pgTable("alert_messages", {
   isRoom: boolean("is_room").notNull(),
 });
 
+// Member calls (/call). Same checkpoint idea as alerts, ranked per caller on the leaderboard.
+export const calls = pgTable(
+  "calls",
+  {
+    id: serial("id").primaryKey(),
+    userId: bigint("user_id", { mode: "number" }).notNull(),
+    // Name and tier as they were at call time, so the board doesn't change when someone renames
+    caller: text("caller").notNull(),
+    tier: text("tier"),
+    chain: text("chain").notNull(),
+    address: text("address").notNull(),
+    symbol: text("symbol"),
+    priceUsd: doublePrecision("price_usd"),
+    marketCapUsd: doublePrecision("market_cap_usd").notNull(),
+    chatId: bigint("chat_id", { mode: "number" }).notNull(),
+    messageId: integer("message_id"),
+    marketCap1h: doublePrecision("market_cap_1h"),
+    marketCap6h: doublePrecision("market_cap_6h"),
+    marketCap24h: doublePrecision("market_cap_24h"),
+    peakMultiple: doublePrecision("peak_multiple"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.userId, t.createdAt), index().on(t.chain, t.address, t.createdAt)],
+);
+
 export type User = typeof users.$inferSelect;
+export type Call = typeof calls.$inferSelect;
 export type Alert = typeof alerts.$inferSelect;

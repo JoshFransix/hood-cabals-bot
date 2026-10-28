@@ -92,6 +92,7 @@ export const HELP_TEXT = [
   "<code>03</code> Holdings are checked daily. Drop below a tier and you're out of that room.",
   "<code>04</code> Paste any token address here, or use /scan in the rooms, for a risk check.",
   "<code>05</code> Alerts land in your room. Inner Circle gets them first, then Cabal, then Hood. Send /alerts to also get them by DM.",
+  "<code>06</code> Make calls with /call &lt;address&gt;. Each one is scored at 1h, 6h and 24h and ranked on /leaderboard. The week's best Cabal or Inner Circle caller gets the TOP CALLER tag.",
   "",
   "One wallet, one Telegram account.",
 ].join("\n");

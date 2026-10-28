@@ -85,6 +85,20 @@ Market cap is checked 1, 6 and 24 hours after each alert. A 2x or better gets a
 reply under the original room post, and `RECAP_CRON` posts a weekly recap of
 every alert, misses included.
 
+## Calls and the leaderboard
+
+Holders call tokens with `/call <address>` in the rooms or in a DM. The bot
+logs the market cap at that moment, credits the first caller of each token,
+and blocks repeat calls of the same token within 24 hours (max 10 calls a day).
+Calls are scored at 1, 6 and 24 hours; a 2x or better gets a reply under the
+call.
+
+`/leaderboard` ranks callers over 7 days, 30 days or all time by the median
+peak of their calls, so steady callers beat one lucky moonshot. Callers need 3
+scored calls to appear. `/mycalls` shows your own record. Each Monday the recap
+adds the week's top callers, and the best Cabal or Inner Circle caller wears
+the `TOP CALLER` tag for a week.
+
 ## Stack
 
 TypeScript (strict), grammY, Fastify, Postgres with Drizzle, viem, and pg-boss
