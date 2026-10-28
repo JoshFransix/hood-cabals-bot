@@ -1,9 +1,24 @@
 {
   "solana": [
+    { "name": "Axiom", "url": "https://axiom.trade/meme/{pair}?chain=sol" },
     { "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_sol_{address}" },
     { "name": "Trojan", "url": "https://t.me/solana_trojanbot?start=r-joshfransix-{address}" }
   ],
-  "ethereum": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_eth_{address}" }],
-  "base": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_base_{address}" }],
-  "bsc": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_bsc_{address}" }]
+  "robinhood": [
+    { "name": "Banana", "url": "https://pro.bananagun.io/robinhood/{address}?referral=Bnun3zCe" },
+    { "name": "Axiom", "url": "https://axiom.trade/meme/{pair}?chain=robinhood" }
+  ],
+  "base": [
+    { "name": "Banana", "url": "https://pro.bananagun.io/base/{address}?referral=Bnun3zCe" },
+    { "name": "Axiom", "url": "https://axiom.trade/meme/{pair}?chain=base" },
+    { "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_base_{address}" }
+  ],
+  "ethereum": [
+    { "name": "Axiom", "url": "https://axiom.trade/meme/{pair}?chain=eth" },
+    { "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_eth_{address}" }
+  ],
+  "bsc": [
+    { "name": "Axiom", "url": "https://axiom.trade/meme/{pair}?chain=bnb" },
+    { "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_bsc_{address}" }
+  ]
 }

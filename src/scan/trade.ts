@@ -8,7 +8,7 @@ const link = z.object({
   url: z
     .string()
     .url()
-    .refine((u) => u.startsWith("https://") && u.includes("{address}"), "must be https and contain {address}"),
+    .refine((u) => u.startsWith("https://") && /\{(address|pair)\}/.test(u), "must be https and contain {address} or {pair}"),
 });
 // Keyed by DEXScreener chain id ("solana", "base", "bsc", ...); chains without an entry get no buttons
 const file = z.record(z.string(), z.array(link));
@@ -17,7 +17,8 @@ export type TradeLinks = z.infer<typeof file>;
 
 /**
  * Trade buttons come from trade-links.json so referral links can change without code changes.
- * Each url is a real token link copied from the platform with the token address swapped for {address}.
+ * Each url is a real token link copied from the platform with the token address swapped for {address},
+ * or the pair address for {pair} on platforms that open pairs (Axiom).
  */
 export function loadTradeLinks(path = join(process.cwd(), "trade-links.json")): TradeLinks {
   let raw: unknown;
@@ -34,6 +35,8 @@ export function loadTradeLinks(path = join(process.cwd(), "trade-links.json")): 
   return parsed.data;
 }
 
-export function tradeButtons(links: TradeLinks, chain: ScanChain, address: string) {
-  return (links[chain] ?? []).map((l) => ({ name: l.name, url: l.url.replaceAll("{address}", address) }));
+export function tradeButtons(links: TradeLinks, chain: ScanChain, address: string, pair?: string) {
+  return (links[chain] ?? [])
+    .filter((l) => pair || !l.url.includes("{pair}"))
+    .map((l) => ({ name: l.name, url: l.url.replaceAll("{address}", address).replaceAll("{pair}", pair ?? "") }));
 }

@@ -46,6 +46,8 @@ the link. They're configured in `trade-links.json`, not in code:
 }
 ```
 
+Use `{address}` for the token address, or `{pair}` for platforms that open the
+trading pair instead (Axiom). Pair links are skipped while a token has no pair.
 Keys are DEXScreener chain ids (`solana`, `ethereum`, `base`, `bsc`, `robinhood`, …).
 Chains without an entry get no trade buttons.
 

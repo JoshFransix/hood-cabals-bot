@@ -35,7 +35,7 @@ export function registerScan(bot: Bot, deps: Deps) {
       return ctx.reply(text, { reply_parameters: { message_id: ctx.msg!.message_id } });
     }
     void recordScan(deps, scan, userId, ctx.chat!.id);
-    const card = scanCard(scan, tradeButtons(tradeLinks, scan.chain, scan.address));
+    const card = scanCard(scan, tradeButtons(tradeLinks, scan.chain, scan.address, scan.market?.pairAddress));
     const opts = { parse_mode: "HTML" as const, reply_markup: card.keyboard, link_preview_options: { is_disabled: true } };
 
     if (ctx.callbackQuery) {
