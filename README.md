@@ -15,14 +15,15 @@ that group and gets a DM. Thresholds live in `src/tiers.ts`.
 
 ## Token scans
 
-`/scan <address>` in any room, or paste an address in a DM with the bot. The
-chain comes from the address: `0x…` is Robinhood Chain, base58 is Solana.
+`/scan <address>` in any room, or paste an address in a DM with the bot. Any
+chain works: the bot asks DEXScreener where the token trades and scans it on
+the chain with the most liquidity, listing the others on the card.
 
 | Source      | Used for                                                   | Chain           |
 | ----------- | ---------------------------------------------------------- | --------------- |
 | DEXScreener | Price, market cap, liquidity, volume, pair age, chart link | Both            |
 | RugCheck    | Mint/freeze authority, top holders, LP lock, bonding curve | Solana          |
-| GoPlus      | Honeypot, taxes, mint, owner, top holders, LP holders      | Robinhood Chain |
+| GoPlus      | Honeypot, taxes, mint, owner, top holders, LP holders      | EVM chains, Tron (see `src/scan/chains.ts`) |
 
 Results are cached for 60 seconds, so many people scanning the same token cost
 one lookup. Holders get 10 scans a minute, everyone else 3. If a source fails,
@@ -41,9 +42,12 @@ the link. They're configured in `trade-links.json`, not in code:
     { "name": "Axiom", "url": "https://<your axiom token link with {address}>" },
     { "name": "GMGN", "url": "https://<your gmgn token link with {address}>" }
   ],
-  "robinhood": []
+  "base": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_CODE_base_{address}" }]
 }
 ```
+
+Keys are DEXScreener chain ids (`solana`, `ethereum`, `base`, `bsc`, `robinhood`, …).
+Chains without an entry get no trade buttons.
 
 To get a template, open any token on the platform while logged in, copy its
 share or referral link for that token, and replace the token address in it

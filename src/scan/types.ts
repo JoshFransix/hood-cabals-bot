@@ -1,4 +1,5 @@
-export type ScanChain = "solana" | "robinhood";
+/** DEXScreener chain id, e.g. "solana", "base", "robinhood" */
+export type ScanChain = string;
 
 export interface MarketData {
   name?: string;
@@ -65,5 +66,7 @@ export interface ScanResult {
   market: MarketData | null;
   security: SecurityData | null;
   risk: Risk;
+  /** Other chains the same address trades on, by liquidity */
+  otherChains: string[];
   scannedAt: Date;
 }

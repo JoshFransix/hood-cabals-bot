@@ -1,10 +1,9 @@
 import { InlineKeyboard, type Bot, type Context } from "grammy";
 import type { Deps } from "../deps.js";
 import { getUser } from "../holders.js";
-import { detectChain, findAddress } from "../scan/detect.js";
+import { findAddress, parseAddress } from "../scan/detect.js";
 import { RateLimiter } from "../scan/limit.js";
-import { recordScan, scanToken } from "../scan/service.js";
-import type { ScanChain } from "../scan/types.js";
+import { recordScan, scanToken, type ScanRequest } from "../scan/service.js";
 import { loadTradeLinks, tradeButtons } from "../scan/trade.js";
 import { SCAN_HELP, scanCard } from "../scan/view.js";
 
@@ -16,7 +15,7 @@ export function registerScan(bot: Bot, deps: Deps) {
   const limiter = new RateLimiter();
   const tradeLinks = loadTradeLinks();
 
-  async function runScan(ctx: Context, chain: ScanChain, address: string, fresh: boolean) {
+  async function runScan(ctx: Context, req: ScanRequest, fresh: boolean) {
     const userId = ctx.from!.id;
     const user = await getUser(deps, userId);
     const wait = limiter.take(userId, user?.tier ? HOLDER_PER_MIN : PUBLIC_PER_MIN);
@@ -29,9 +28,14 @@ export function registerScan(bot: Bot, deps: Deps) {
     }
 
     await ctx.replyWithChatAction("typing").catch(() => {});
-    const scan = await scanToken(deps, chain, address, { fresh });
+    const scan = await scanToken(deps, req, { fresh });
+    if (!scan) {
+      const text = "◈ Couldn't find this token on any DEX yet. If it just launched, try again in a minute.";
+      if (ctx.callbackQuery) return ctx.answerCallbackQuery({ text });
+      return ctx.reply(text, { reply_parameters: { message_id: ctx.msg!.message_id } });
+    }
     void recordScan(deps, scan, userId, ctx.chat!.id);
-    const card = scanCard(scan, tradeButtons(tradeLinks, chain, address));
+    const card = scanCard(scan, tradeButtons(tradeLinks, scan.chain, scan.address));
     const opts = { parse_mode: "HTML" as const, reply_markup: card.keyboard, link_preview_options: { is_disabled: true } };
 
     if (ctx.callbackQuery) {
@@ -43,17 +47,19 @@ export function registerScan(bot: Bot, deps: Deps) {
   }
 
   bot.command("scan", async (ctx) => {
-    const target = detectChain(ctx.match) ?? detectChain(findAddress(ctx.match) ?? "");
+    const target = parseAddress(ctx.match) ?? parseAddress(findAddress(ctx.match) ?? "");
     if (!target) {
       if (ctx.chat.type === "private") return ctx.reply(SCAN_HELP, { parse_mode: "HTML" });
       return ctx.reply("Usage: /scan <token address>", { reply_parameters: { message_id: ctx.msg.message_id } });
     }
-    await runScan(ctx, target.chain, target.address, false);
+    await runScan(ctx, target, false);
   });
 
-  bot.callbackQuery(/^rescan:(solana|robinhood):(\w+)$/, async (ctx) => {
-    const [, chain, address] = ctx.match;
-    await runScan(ctx, chain as ScanChain, address!, true);
+  bot.callbackQuery(/^rescan:([a-z0-9]+):(\S+)$/, async (ctx) => {
+    const [, chain, raw] = ctx.match;
+    const target = parseAddress(raw!);
+    if (!target) return ctx.answerCallbackQuery();
+    await runScan(ctx, { ...target, chain }, true);
   });
 
   bot.callbackQuery("scan-help", async (ctx) => {
@@ -66,8 +72,8 @@ export function registerScan(bot: Bot, deps: Deps) {
 
   // In DMs, a message that is just an address gets scanned without a command
   bot.chatType("private").on("message:text", async (ctx, next) => {
-    const target = detectChain(ctx.msg.text);
+    const target = parseAddress(ctx.msg.text);
     if (!target) return next();
-    await runScan(ctx, target.chain, target.address, false);
+    await runScan(ctx, target, false);
   });
 }

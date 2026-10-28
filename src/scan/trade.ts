@@ -10,7 +10,8 @@ const link = z.object({
     .url()
     .refine((u) => u.startsWith("https://") && u.includes("{address}"), "must be https and contain {address}"),
 });
-const file = z.object({ solana: z.array(link).default([]), robinhood: z.array(link).default([]) });
+// Keyed by DEXScreener chain id ("solana", "base", "bsc", ...); chains without an entry get no buttons
+const file = z.record(z.string(), z.array(link));
 
 export type TradeLinks = z.infer<typeof file>;
 
@@ -23,7 +24,7 @@ export function loadTradeLinks(path = join(process.cwd(), "trade-links.json")): 
   try {
     raw = JSON.parse(readFileSync(path, "utf8"));
   } catch {
-    return { solana: [], robinhood: [] };
+    return {};
   }
   const parsed = file.safeParse(raw);
   if (!parsed.success) {
@@ -34,5 +35,5 @@ export function loadTradeLinks(path = join(process.cwd(), "trade-links.json")): 
 }
 
 export function tradeButtons(links: TradeLinks, chain: ScanChain, address: string) {
-  return links[chain].map((l) => ({ name: l.name, url: l.url.replaceAll("{address}", address) }));
+  return (links[chain] ?? []).map((l) => ({ name: l.name, url: l.url.replaceAll("{address}", address) }));
 }

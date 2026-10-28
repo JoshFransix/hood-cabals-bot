@@ -24,18 +24,18 @@ interface TokenSecurity {
   lp_holders?: Holder[];
 }
 
-const ROBINHOOD_CHAIN_ID = 4663;
 const BURN = /^0x0{40}$|^0x0{36}dead$/i;
 
 const flag = (v: string | undefined) => (v === undefined || v === "" ? undefined : v === "1");
 const pct = (v: string | undefined) => (v === undefined || v === "" ? undefined : Number(v) * 100);
 
-export async function fetchEvmSecurity(address: string, pairAddress?: string): Promise<SecurityData | null> {
+export async function fetchGoplusSecurity(chainId: string, address: string, pairAddress?: string): Promise<SecurityData | null> {
   const body = await getJson<{ code: number; message: string; result?: Record<string, TokenSecurity> }>(
-    `https://api.gopluslabs.io/api/v1/token_security/${ROBINHOOD_CHAIN_ID}?contract_addresses=${address}`,
+    `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${address}`,
   );
   if (body.code !== 1) throw new Error(`GoPlus: ${body.message}`);
-  const t = body.result?.[address.toLowerCase()];
+  // EVM results are keyed lowercase; Tron keeps its base58 casing
+  const t = body.result?.[address] ?? body.result?.[address.toLowerCase()];
   if (!t) return null;
 
   const pair = pairAddress?.toLowerCase();

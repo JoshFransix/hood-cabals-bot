@@ -22,6 +22,6 @@ describe("trade links", () => {
   });
 
   it("treats a missing file as no buttons", () => {
-    expect(loadTradeLinks("/nope/trade-links.json")).toEqual({ solana: [], robinhood: [] });
+    expect(loadTradeLinks("/nope/trade-links.json")).toEqual({});
   });
 });

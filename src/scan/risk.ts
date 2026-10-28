@@ -10,9 +10,11 @@ export function assessRisk(market: MarketData | null, security: SecurityData | n
   if (security) {
     const s = security;
     if (s.honeypot) add(10, "Honeypot: sells are blocked");
-    if (s.mintable) add(3, "Dev can still mint more supply");
+    // Owner-only switches are harmless once nobody owns the contract
+    const ownerless = s.ownerRenounced === true;
+    if (s.mintable && !ownerless) add(3, "Dev can still mint more supply");
     if (s.freezable) add(3, "Dev can freeze wallets");
-    if (s.pausable) add(3, "Transfers can be paused");
+    if (s.pausable && !ownerless) add(3, "Transfers can be paused");
     if (s.hiddenOwner) add(3, "Hidden owner");
     if (s.sellTaxPct !== undefined && s.sellTaxPct > 10) add(3, `Sell tax ${fmtPct(s.sellTaxPct)}`);
     else if ((s.sellTaxPct ?? 0) > 5 || (s.buyTaxPct ?? 0) > 5) add(1, `Tax ${fmtPct(s.buyTaxPct ?? 0)} / ${fmtPct(s.sellTaxPct ?? 0)}`);

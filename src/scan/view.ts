@@ -1,4 +1,5 @@
 import { InlineKeyboard } from "grammy";
+import { chainLabel as labelFor } from "./chains.js";
 import type { FullScan } from "./service.js";
 import type { RiskLevel } from "./types.js";
 
@@ -61,7 +62,7 @@ function fmtCount(n: number): string {
 export function scanCard(scan: FullScan, trade: { name: string; url: string }[] = []) {
   const { market: m, security: s, risk } = scan;
   const symbol = m?.symbol ? `$${escape(m.symbol)}` : "UNKNOWN";
-  const chainLabel = scan.chain === "solana" ? "SOLANA" : "ROBINHOOD";
+  const chainLabel = labelFor(scan.chain);
 
   // One-line summary so the essentials are readable before the table
   const venue = s?.onBondingCurve ? "PUMP" : m?.dex ? (DEX_NAMES[m.dex] ?? m.dex.toUpperCase()) : null;
@@ -84,9 +85,10 @@ export function scanCard(scan: FullScan, trade: { name: string; url: string }[] 
   if (s?.insiderWallets !== undefined) {
     rows.push(["INSIDERS", s.insiderWallets ? `${s.insiderWallets} wallets · ${fmtPct(s.insiderPct)}` : "NONE FOUND"]);
   }
-  if (scan.chain === "solana") {
+  // Row set follows the security source: RugCheck speaks Solana, GoPlus speaks EVM and Tron
+  if (s?.source === "rugcheck") {
     rows.push(["MINT", yesNo(s?.mintable, "ACTIVE", "REVOKED")], ["FREEZE", yesNo(s?.freezable, "ACTIVE", "REVOKED")]);
-  } else {
+  } else if (s?.source === "goplus") {
     rows.push(
       ["HONEYPOT", yesNo(s?.honeypot, "YES", "NO")],
       ["TAX B/S", s?.buyTaxPct !== undefined || s?.sellTaxPct !== undefined ? `${fmtPct(s?.buyTaxPct ?? 0)} / ${fmtPct(s?.sellTaxPct ?? 0)}` : "—"],
@@ -112,6 +114,7 @@ export function scanCard(scan: FullScan, trade: { name: string; url: string }[] 
     `${RISK_BADGE[risk.level]} <b>RISK / ${risk.level}</b>`,
     ...reasons.map((r) => `· ${escape(r)}`),
   ];
+  if (scan.otherChains.length) lines.push("", `<i>Also trades on ${scan.otherChains.slice(0, 4).map(labelFor).join(", ")}</i>`);
   if (socials) lines.push("", socials);
   if (scan.missing.length) lines.push("", `<i>Couldn't load ${scan.missing.join(" or ")}. Try Rescan.</i>`);
   lines.push("", `<i>Not financial advice.${sources ? ` Data: ${sources}.` : ""}</i>`);
@@ -123,7 +126,9 @@ export function scanCard(scan: FullScan, trade: { name: string; url: string }[] 
   });
   if (trade.length % 3 !== 0) keyboard.row();
   if (m?.url) keyboard.url("Chart ↗", m.url);
-  keyboard.text("Rescan ↻", `rescan:${scan.chain}:${scan.address}`);
+  // Telegram caps button data at 64 bytes; very long addresses just don't get Rescan
+  const rescan = `rescan:${scan.chain}:${scan.address}`;
+  if (Buffer.byteLength(rescan) <= 64) keyboard.text("Rescan ↻", rescan);
   return { text: lines.join("\n"), keyboard };
 }
 
@@ -135,9 +140,9 @@ function fmtBigPct(n: number | undefined): string {
 
 export const SCAN_HELP = [
   "◈ <b>SCAN</b>",
-  "<code>SOLANA / ROBINHOOD CHAIN</code>",
+  "<code>ANY CHAIN / SOLANA · ROBINHOOD · BASE · ETH · BSC · +40</code>",
   "",
   "Paste a token address here, or use <code>/scan &lt;address&gt;</code> in any of the rooms.",
   "",
-  "You get liquidity, market cap, holder concentration, mint and freeze status, taxes, LP lock and a risk call.",
+  "You get liquidity, market cap, holder concentration, mint and freeze status, taxes, LP lock and a risk call. The chain is picked from where the token trades.",
 ].join("\n");

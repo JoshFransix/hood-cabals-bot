@@ -1,4 +1,9 @@
 {
-  "solana": [],
-  "robinhood": []
+  "solana": [
+    { "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_sol_{address}" },
+    { "name": "Trojan", "url": "https://t.me/solana_trojanbot?start=r-joshfransix-{address}" }
+  ],
+  "ethereum": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_eth_{address}" }],
+  "base": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_base_{address}" }],
+  "bsc": [{ "name": "GMGN", "url": "https://t.me/gmgnaibot?start=i_FEeVsM3Y_bsc_{address}" }]
 }

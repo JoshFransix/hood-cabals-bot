@@ -25,13 +25,29 @@ interface Orders {
 
 const SOCIAL_LABELS: Record<string, string> = { twitter: "X", telegram: "TG", discord: "Discord" };
 
-const CHAIN_IDS: Record<ScanChain, string> = { solana: "solana", robinhood: "robinhood" };
+export type DexPair = Pair;
 
-/** Uses the deepest pair where the token is the base asset, which is what traders look at. */
-export async function fetchMarket(chain: ScanChain, address: string): Promise<MarketData | null> {
+/** Every pair for this address on every chain DEXScreener tracks. */
+export async function fetchAllPairs(address: string): Promise<Pair[]> {
+  const body = await getJson<{ pairs: Pair[] | null }>(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+  return (body.pairs ?? []).filter((p) => p.baseToken.address.toLowerCase() === address.toLowerCase());
+}
+
+/** Chains the token trades on, deepest liquidity first. */
+export function chainsByLiquidity(pairs: Pair[]): string[] {
+  const liquidity = new Map<string, number>();
+  for (const p of pairs) liquidity.set(p.chainId, (liquidity.get(p.chainId) ?? 0) + (p.liquidity?.usd ?? 0));
+  return [...liquidity.entries()].sort((a, b) => b[1] - a[1]).map(([chain]) => chain);
+}
+
+/**
+ * Uses the deepest pair where the token is the base asset, which is what traders look at.
+ * Pass pairs from fetchAllPairs to skip a second lookup.
+ */
+export async function fetchMarket(chain: ScanChain, address: string, known?: Pair[]): Promise<MarketData | null> {
   const [pairs, orders] = await Promise.all([
-    getJson<Pair[]>(`https://api.dexscreener.com/tokens/v1/${CHAIN_IDS[chain]}/${address}`),
-    getJson<Orders>(`https://api.dexscreener.com/orders/v1/${CHAIN_IDS[chain]}/${address}`).catch(() => null),
+    known ? known.filter((p) => p.chainId === chain) : getJson<Pair[]>(`https://api.dexscreener.com/tokens/v1/${chain}/${address}`),
+    getJson<Orders>(`https://api.dexscreener.com/orders/v1/${chain}/${address}`).catch(() => null),
   ]);
   const own = pairs.filter((p) => p.baseToken.address.toLowerCase() === address.toLowerCase());
   const pair = (own.length ? own : pairs).sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];

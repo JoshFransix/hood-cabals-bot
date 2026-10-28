@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectChain, findAddress } from "../src/scan/detect.js";
+import { fallbackChain, findAddress, parseAddress } from "../src/scan/detect.js";
 import { assessRisk } from "../src/scan/risk.js";
 import type { MarketData, SecurityData } from "../src/scan/types.js";
 
@@ -61,26 +61,39 @@ describe("assessRisk", () => {
     expect(assessRisk(healthyMarket, { ...cleanSol, insiderPct: 35 }).reasons).toContain("Insider networks hold 35%");
   });
 
+  it("ignores owner-only switches once ownership is renounced", () => {
+    const evm = { source: "goplus" as const, pausable: true, mintable: true, flags: [] };
+    expect(assessRisk(healthyMarket, { ...evm, ownerRenounced: true }).reasons).not.toContain("Transfers can be paused");
+    expect(assessRisk(healthyMarket, { ...evm, ownerRenounced: false }).level).toBe("HIGH");
+  });
+
   it("is UNKNOWN with no data at all", () => {
     expect(assessRisk(null, null).level).toBe("UNKNOWN");
   });
 });
 
-describe("detectChain", () => {
-  it("routes EVM addresses to Robinhood Chain, lowercased", () => {
-    expect(detectChain("0x3F5e952b29bE5D70846FC2bA472BeA05761A769E")).toEqual({
-      chain: "robinhood",
+describe("parseAddress", () => {
+  it("recognises EVM addresses, lowercased", () => {
+    expect(parseAddress("0x3F5e952b29bE5D70846FC2bA472BeA05761A769E")).toEqual({
+      kind: "evm",
       address: "0x3f5e952b29be5d70846fc2ba472bea05761a769e",
     });
   });
 
-  it("routes base58 addresses to Solana", () => {
-    expect(detectChain("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")?.chain).toBe("solana");
+  it("recognises base58 and TON addresses", () => {
+    expect(parseAddress("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")?.kind).toBe("base58");
+    expect(parseAddress("EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs")?.kind).toBe("ton");
   });
 
   it("rejects junk", () => {
-    expect(detectChain("hello")).toBeNull();
-    expect(detectChain("0x123")).toBeNull();
+    expect(parseAddress("hello")).toBeNull();
+    expect(parseAddress("0x123")).toBeNull();
+  });
+
+  it("guesses Solana or Tron for base58 tokens no DEX knows yet", () => {
+    expect(fallbackChain("base58", "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")).toBe("solana");
+    expect(fallbackChain("base58", "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")).toBe("tron");
+    expect(fallbackChain("evm", "0xabc")).toBeNull();
   });
 
   it("finds a pump.fun mint inside a pasted call", () => {
